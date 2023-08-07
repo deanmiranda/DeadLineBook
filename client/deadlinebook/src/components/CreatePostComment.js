@@ -53,7 +53,6 @@ const CreatePostComment = ({ postId, setPostId }) => {
         console.error('Error creating comment:', error);
       });
   };
-  
 
   return (
     <div>

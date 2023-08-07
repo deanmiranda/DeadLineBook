@@ -24,6 +24,16 @@ const GET_ALL_POSTS = gql`
   }
 `;
 
+const GET_ALL_COMMENTS = gql`
+  query {
+    getAllComments {
+      id
+      postId
+      text
+    }
+  }
+`;
+
 const ParentComponent = () => {
   const [selectedPostId, setSelectedPostId] = React.useState(null);
 
@@ -36,17 +46,23 @@ const ParentComponent = () => {
 };
 
 const QueryComponent = () => {
-  const { loading, error, data } = useQuery(GET_ALL_POSTS);
+  const { loading: postsLoading, error: postsError, data: postsData } = useQuery(GET_ALL_POSTS);
+  const { loading: commentsLoading, error: commentsError, data: commentsData } = useQuery(GET_ALL_COMMENTS);
 
-  if (loading) {
+  if (postsLoading || commentsLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
+  if (postsError) {
     return <div>Error loading posts.</div>;
   }
 
-  const posts = data.getAllPosts;
+  if (commentsError) {
+    return <div>Error loading comments.</div>;
+  }
+
+  const posts = postsData.getAllPosts;
+  const comments = commentsData.getAllComments;
 
   return (
     <div>
@@ -54,11 +70,21 @@ const QueryComponent = () => {
         <div key={post.id}>
           <h3>{post.title}</h3>
           <p>{post.content}</p>
+
+          <h4>Comments:</h4>
+          <ul>
+            {comments.map((comment) => (
+              comment.postId === post.id && (
+                <li key={comment.id}>{comment.text}</li>
+              )
+            ))}
+          </ul>
         </div>
       ))}
     </div>
   );
 };
+
 
 const root = document.getElementById('root');
 const rootElement = <ParentComponent />;
