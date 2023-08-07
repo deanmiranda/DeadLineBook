@@ -24,7 +24,7 @@ const CREATE_COMMENT_MUTATION = gql`
   }
 `;
 
-const CreatePostComment = ({ postId }) => {
+const CreatePostComment = ({ postId, setPostId }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [text, setText] = useState('');
@@ -44,12 +44,16 @@ const CreatePostComment = ({ postId }) => {
     // Use the actual postId passed as a prop to create the comment for the specific post.
     createComment({ variables: { postId, text } })
       .then(() => {
+        // Comment creation is successful, reset postId and text states
+        setPostId('');
         setText('');
       })
       .catch((error) => {
+        // Handle error, if any
         console.error('Error creating comment:', error);
       });
   };
+  
 
   return (
     <div>

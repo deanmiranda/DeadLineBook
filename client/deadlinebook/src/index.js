@@ -1,46 +1,62 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import CreatePostComment from './components/CreatePostComment';
-import { ApolloProvider } from '@apollo/client';
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloProvider, ApolloClient, InMemoryCache, useQuery, gql } from '@apollo/client';
+import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 
-// Create the Apollo Client instance
+if (process.env.NODE_ENV !== "production") {
+  loadDevMessages();
+  loadErrorMessages();
+}
+
 const client = new ApolloClient({
-  uri: 'http://localhost:4000/graphql', // Replace with your GraphQL server URL
+  uri: 'http://localhost:4000/graphql', 
   cache: new InMemoryCache(),
 });
 
-// Create a parent component to wrap the CreatePostComment component
+const GET_ALL_POSTS = gql`
+  query {
+    getAllPosts {
+      id
+      title
+      content
+    }
+  }
+`;
+
 const ParentComponent = () => {
-  // State to keep track of the selected post id
   const [selectedPostId, setSelectedPostId] = React.useState(null);
-
-  // Assuming you have a list of posts with their respective ids
-  const posts = [
-    { id: 'post1', title: 'Post 1', content: 'Content of Post 1' },
-    { id: 'post2', title: 'Post 2', content: 'Content of Post 2' },
-    // Add more posts as needed
-  ];
-
-  const handlePostSelect = (postId) => {
-    setSelectedPostId(postId);
-  };
 
   return (
     <ApolloProvider client={client}>
-      {/* Render the CreatePostComment component */}
-      <CreatePostComment postId={selectedPostId} />
+      <CreatePostComment postId={selectedPostId} setPostId={setSelectedPostId} />
+      <QueryComponent />
+    </ApolloProvider>
+  );
+};
 
-      {/* Display the list of posts */}
+const QueryComponent = () => {
+  const { loading, error, data } = useQuery(GET_ALL_POSTS);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading posts.</div>;
+  }
+
+  const posts = data.getAllPosts;
+
+  return (
+    <div>
       {posts.map((post) => (
         <div key={post.id}>
           <h3>{post.title}</h3>
           <p>{post.content}</p>
-          <button onClick={() => handlePostSelect(post.id)}>Select Post</button>
         </div>
       ))}
-    </ApolloProvider>
+    </div>
   );
 };
 

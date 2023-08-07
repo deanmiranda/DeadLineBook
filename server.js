@@ -4,15 +4,13 @@ const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-// Replace 'YourMongoDBURL' with your actual MongoDB URL
+// Replace 'YourMongoDBURL' with your local MongoDB URL
 const MONGO_DB_URL = 'mongodb://127.0.0.1:27017/deadlinebook';
 
-// Connect to MongoDB using Mongoose
 mongoose.connect(MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('Error connecting to MongoDB:', err));
 
-// Create Mongoose schemas and models
 const postSchema = new mongoose.Schema({
   title: String,
   content: String,
@@ -112,11 +110,9 @@ const root = {
     try {
       const comment = new Comment({ postId, text, date: new Date() });
       const savedComment = await comment.save();
-      return savedComment; // Return the saved comment instead of the new comment instance
+      return savedComment;
     } catch (error) {
-      // Log the error for debugging purposes
       console.error('Error creating comment:', error);
-      // Rethrow the error with a generic message
       throw new Error('Error creating comment. Please try again later.');
     }
   },
@@ -135,14 +131,12 @@ const root = {
 
 const app = express();
 
-// Enable CORS for all routes
 app.use(cors());
 
-// Define the GraphQL endpoint
 app.use('/graphql', graphqlHTTP({
   schema: schema,
   rootValue: root,
-  graphiql: true, // Set this to false in production to disable the GraphQL IDE
+  graphiql: true, // Set this to false in production
 }));
 
 const port = process.env.PORT || 4000;
