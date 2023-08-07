@@ -2,9 +2,10 @@ const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 // Replace 'YourMongoDBURL' with your actual MongoDB URL
-const MONGO_DB_URL = 'mongodb://localhost:27017/deadlinebook/db';
+const MONGO_DB_URL = 'mongodb://127.0.0.1:27017/deadlinebook';
 
 // Connect to MongoDB using Mongoose
 mongoose.connect(MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -54,8 +55,10 @@ const schema = buildSchema(`
   type Mutation {
     createPost(title: String!, content: String!): Post
     createComment(postId: ID!, text: String!): Comment
+    removeAllPosts: Boolean
   }
 `);
+
 
 // Root resolver
 const root = {
@@ -108,15 +111,32 @@ const root = {
   createComment: async ({ postId, text }) => {
     try {
       const comment = new Comment({ postId, text, date: new Date() });
-      await comment.save();
-      return comment;
+      const savedComment = await comment.save();
+      return savedComment; // Return the saved comment instead of the new comment instance
     } catch (error) {
-      throw new Error('Error creating comment.');
+      // Log the error for debugging purposes
+      console.error('Error creating comment:', error);
+      // Rethrow the error with a generic message
+      throw new Error('Error creating comment. Please try again later.');
     }
   },
+
+  removeAllPosts: async () => {
+    try {
+      await Post.deleteMany({});
+      return true; // Return true to indicate successful removal
+    } catch (error) {
+      console.error('Error removing all posts:', error);
+      throw new Error('Error removing all posts. Please try again later.');
+    }
+  },
+  
 };
 
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Define the GraphQL endpoint
 app.use('/graphql', graphqlHTTP({
@@ -127,5 +147,5 @@ app.use('/graphql', graphqlHTTP({
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}/graphql`);
+  console.log(`Server is running on http://127.0.0.1:${port}/graphql`);
 });
