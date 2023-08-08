@@ -1,8 +1,8 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import CreatePostComment from './components/CreatePostComment';
-import { ApolloProvider, ApolloClient, InMemoryCache, useQuery, gql } from '@apollo/client';
+import { createRoot } from 'react-dom';
+import { ApolloProvider, ApolloClient, InMemoryCache, useQuery, useMutation, gql } from '@apollo/client';
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+import CreatePostComment from './components/CreatePostComment';
 
 if (process.env.NODE_ENV !== "production") {
   loadDevMessages();
@@ -24,32 +24,20 @@ const GET_ALL_POSTS = gql`
   }
 `;
 
-const GET_ALL_COMMENTS = gql`
-  query {
-    getAllComments {
-      id
-      postId
-      text
-    }
+const REMOVE_ALL_POSTS_MUTATION = gql`
+  mutation {
+    removeAllPosts
   }
 `;
 
-const ParentComponent = () => {
-  const [selectedPostId, setSelectedPostId] = React.useState(null);
-
-  return (
-    <ApolloProvider client={client}>
-      <CreatePostComment postId={selectedPostId} setPostId={setSelectedPostId} />
-      <QueryComponent />
-    </ApolloProvider>
-  );
-};
-
 const QueryComponent = () => {
-  const { loading: postsLoading, error: postsError, data: postsData } = useQuery(GET_ALL_POSTS);
-  const { loading: commentsLoading, error: commentsError, data: commentsData } = useQuery(GET_ALL_COMMENTS);
+  const [removeAllPosts] = useMutation(REMOVE_ALL_POSTS_MUTATION, {
+    refetchQueries: [{ query: GET_ALL_POSTS }]
+  });
 
-  if (postsLoading || commentsLoading) {
+  const { loading: postsLoading, error: postsError, data: postsData } = useQuery(GET_ALL_POSTS);
+
+  if (postsLoading) {
     return <div>Loading...</div>;
   }
 
@@ -57,12 +45,7 @@ const QueryComponent = () => {
     return <div>Error loading posts.</div>;
   }
 
-  if (commentsError) {
-    return <div>Error loading comments.</div>;
-  }
-
   const posts = postsData.getAllPosts;
-  const comments = commentsData.getAllComments;
 
   return (
     <div>
@@ -70,22 +53,18 @@ const QueryComponent = () => {
         <div key={post.id}>
           <h3>{post.title}</h3>
           <p>{post.content}</p>
-
-          <h4>Comments:</h4>
-          <ul>
-            {comments.map((comment) => (
-              comment.postId === post.id && (
-                <li key={comment.id}>{comment.text}</li>
-              )
-            ))}
-          </ul>
         </div>
       ))}
+      <button onClick={removeAllPosts}>Remove All Posts</button>
     </div>
   );
 };
 
-
 const root = document.getElementById('root');
-const rootElement = <ParentComponent />;
+const rootElement = (
+  <ApolloProvider client={client}>
+    <CreatePostComment />
+    <QueryComponent />
+  </ApolloProvider>
+);
 createRoot(root).render(rootElement);

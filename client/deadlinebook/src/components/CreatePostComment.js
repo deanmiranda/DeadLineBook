@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { gql } from 'apollo-boost';
+import { useMutation, gql } from '@apollo/client';
+
+const GET_ALL_POSTS = gql`
+  query {
+    getAllPosts {
+      id
+      title
+      content
+    }
+  }
+`;
 
 const CREATE_POST_MUTATION = gql`
   mutation createPost($title: String!, $content: String!) {
@@ -29,7 +38,17 @@ const CreatePostComment = ({ postId, setPostId }) => {
   const [content, setContent] = useState('');
   const [text, setText] = useState('');
 
-  const [createPost] = useMutation(CREATE_POST_MUTATION);
+  const [createPost] = useMutation(CREATE_POST_MUTATION, {
+    update: (cache, { data: { createPost } }) => {
+      // Update the cache to include the newly created post
+      const existingPosts = cache.readQuery({ query: GET_ALL_POSTS });
+      cache.writeQuery({
+        query: GET_ALL_POSTS,
+        data: { getAllPosts: [...existingPosts.getAllPosts, createPost] },
+      });
+    },
+  });
+
   const [createComment, { error: commentError, loading: commentLoading }] = useMutation(CREATE_COMMENT_MUTATION);
 
   const handlePostSubmit = (e) => {
@@ -39,6 +58,7 @@ const CreatePostComment = ({ postId, setPostId }) => {
     setContent('');
   };
 
+  
   const handleCommentSubmit = (e) => {
     e.preventDefault();
     // Use the actual postId passed as a prop to create the comment for the specific post.

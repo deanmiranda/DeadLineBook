@@ -53,8 +53,9 @@ const schema = buildSchema(`
   type Mutation {
     createPost(title: String!, content: String!): Post
     createComment(postId: ID!, text: String!): Comment
-    removeAllPosts: Boolean
+    removeAllPosts: Boolean 
   }
+  
 `);
 
 
