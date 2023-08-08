@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom';
 import { ApolloProvider, ApolloClient, InMemoryCache, useQuery, useMutation, gql } from '@apollo/client';
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
-import CreatePostComment from './components/CreatePostComment';
+import CreatePost from './components/CreatePost';
 
 if (process.env.NODE_ENV !== "production") {
   loadDevMessages();
@@ -63,7 +63,7 @@ const QueryComponent = () => {
 const root = document.getElementById('root');
 const rootElement = (
   <ApolloProvider client={client}>
-    <CreatePostComment />
+    <CreatePost />
     <QueryComponent />
   </ApolloProvider>
 );
